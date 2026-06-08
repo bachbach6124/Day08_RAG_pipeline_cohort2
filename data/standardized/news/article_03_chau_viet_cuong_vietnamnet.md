@@ -1,0 +1,8 @@
+# Châu Việt Cường nhận án 13 năm tù
+
+**Source:** https://vietnamnet.vn/nhet-toi-lam-co-gai-tu-vong-chau-viet-cuong-nhan-an-13-nam-tu-512186.html
+**Crawled:** 2026-06-08T10:20:15
+
+---
+
+Bài VietnamNet tường thuật kết quả xét xử liên quan ca sĩ Châu Việt Cường. Theo bài báo, hội đồng xét xử đánh giá hành vi xảy ra sau khi sử dụng ma túy và gây hậu quả chết người, từ đó tuyên mức án tù. Dữ liệu này hữu ích cho câu hỏi về hậu quả hình sự khi hành vi liên quan ma túy dẫn tới thiệt hại nghiêm trọng. Từ khóa: Châu Việt Cường, án tù, xét xử, ma túy, hậu quả chết người.

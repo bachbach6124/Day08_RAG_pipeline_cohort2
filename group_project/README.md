@@ -2,7 +2,10 @@
 
 ## Mục Tiêu
 
-Sau khi hoàn thành bài cá nhân, nhóm ngồi lại để xây dựng **1 trong 2 sản phẩm**:
+Sau khi hoàn thành bài cá nhân, nhóm ngồi lại để xây dựng **2 sản phẩm**:
+
+- RAG Chatbot/Search Engine demo bằng Streamlit.
+- RAG Evaluation Pipeline có golden dataset, A/B comparison và báo cáo.
 
 ---
 
@@ -171,7 +174,34 @@ run_dashboard()
 ## Kiến Trúc Hệ Thống
 
 ```
-[Vẽ diagram kiến trúc ở đây]
+Member pipelines
+        │
+        ├── Đào Xuân Bách        → bach_hybrid_legal
+        ├── Đỗ Thiện Lĩnh        → linh_news_bm25
+        ├── Lê Hoài Nam          → nam_hyde_rag
+        ├── Nguyễn Đức Kiên Trung→ trung_dense_semantic
+        ├── Nhan Khánh Đình      → dinh_tfidf_lexical
+        └── Phan Quốc Anh        → anh_fallback_safety
+
+group_project/pipeline_registry.py
+        │
+        ▼
+Streamlit app.py
+        ├── Chat UI with conversation memory
+        ├── Search UI with score/source/highlight display
+        ├── Bonus HyDE retrieval mode
+        ├── Bonus TF-IDF lexical demo mode
+        └── Evaluation report tab
+
+Evaluation
+        │
+        ▼
+group_project/evaluation/eval_pipeline.py
+        ├── Golden dataset 15 Q&A
+        ├── Config A: hybrid + rerank
+        ├── Config B: dense-only
+        ├── Bonus Config: HyDE
+        └── Team benchmark: 6 member pipelines
 ```
 
 ---
@@ -180,10 +210,13 @@ run_dashboard()
 
 | Thành viên | MSSV | Nhiệm vụ | Trạng thái |
 |-----------|------|----------|------------|
-| | | | |
-| | | | |
-| | | | |
-| | | | |
+| Đào Xuân Bách | 2A202600640 | Pipeline `bach_hybrid_legal`: legal corpus, hybrid retrieval, reranking | Hoàn thành |
+| Đỗ Thiện Lĩnh | 2A202600775 | Pipeline `linh_news_bm25`: news-focused BM25 + semantic backup | Hoàn thành |
+| Lê Hoài Nam | 2A202600657 | Pipeline `nam_hyde_rag`: HyDE query expansion + citation generation | Hoàn thành |
+| Nguyễn Đức Kiên Trung | 2A202600769 | Pipeline `trung_dense_semantic`: dense semantic retrieval + rerank | Hoàn thành |
+| Nhan Khánh Đình | 2A202600673 | Pipeline `dinh_tfidf_lexical`: TF-IDF lexical bonus/explanation | Hoàn thành |
+| Phan Quốc Anh | 2A202600890 | Pipeline `anh_fallback_safety`: PageIndex-style fallback, source QA, safety | Hoàn thành |
+| Cả nhóm | - | Streamlit chatbot/search UI, memory, source display, highlight, evaluation report | Hoàn thành |
 
 ---
 
@@ -193,11 +226,54 @@ run_dashboard()
 # Cài đặt dependencies
 pip install -r requirements.txt
 
-# Chạy app
+# Chạy test bài cá nhân
+pytest tests/test_individual.py -q
+
+# Rebuild dữ liệu mẫu/index local nếu cần
+python -m src.bootstrap_sample_data
+
+# Chạy evaluation nhóm và xuất results.md
+python group_project/evaluation/eval_pipeline.py
+
+# Chạy chatbot/search demo
 streamlit run app.py
-# hoặc
-chainlit run app.py
 ```
+
+## Bonus Implemented
+
+| Bonus | Trạng thái | Nơi demo |
+|---|---|---|
+| Giải thích lexical search khác BM25 | Hoàn thành | App tab `Methods`, mode `TF-IDF`, hàm `tfidf_lexical_search` trong `src/task6_lexical_search.py` |
+| HyDE query expansion | Hoàn thành | App sidebar mode `HyDE`, module `src/bonus_hyde.py`, evaluation bonus config |
+| Conversation memory | Hoàn thành | App sidebar toggle `Conversation memory` |
+| UI/UX source, score, highlight | Hoàn thành | App tab `Chat` và `Search` hiển thị route, score, type, chunk, highlight keyword |
+| Deploy chatbot online | Deploy-ready | Chạy được local bằng Streamlit; deploy online cần tài khoản/Hugging Face/Render và credential ngoài repo |
+ 
+## UI/UX Notes
+
+App sử dụng theme sáng có tương phản rõ trong `.streamlit/config.toml`, source documents được đặt trong expander, tự xuống dòng với nội dung dài và highlight từ khóa query để tránh treo/chồng chữ khi tài liệu PDF dài.
+
+## Tích Hợp Pipeline Thành Viên
+
+Trong repo nhóm, "tích hợp pipeline từ bài cá nhân của các thành viên" nghĩa là mỗi thành viên expose pipeline của mình qua cùng một interface:
+
+- `answer(query, top_k)` trả về `{"answer": str, "sources": list[dict]}`
+- `search(query, top_k)` trả về list source chunks có `content`, `score`, `metadata`
+
+File `group_project/pipeline_registry.py` là nơi đăng ký các adapter đó. Hiện app đã tích hợp đủ 6 pipeline:
+
+- `bach_hybrid_legal`
+- `linh_news_bm25`
+- `nam_hyde_rag`
+- `trung_dense_semantic`
+- `dinh_tfidf_lexical`
+- `anh_fallback_safety`
+
+Hướng dẫn chi tiết cho thành viên nhóm: [PIPELINE_INTEGRATION_GUIDE.md](PIPELINE_INTEGRATION_GUIDE.md).
+
+Chi tiết 6 pipeline thành viên: [TEAM_PIPELINES.md](TEAM_PIPELINES.md).
+
+Hướng dẫn deploy online: [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 

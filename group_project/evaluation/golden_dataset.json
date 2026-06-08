@@ -1,17 +1,77 @@
 [
   {
-    "question": "Hình phạt cho tội tàng trữ trái phép chất ma tuý theo Điều 249 Bộ luật Hình sự?",
-    "expected_answer": "Phạt tù từ 1 đến 5 năm đối với trường hợp tàng trữ từ 1g đến dưới 5g heroin hoặc cocaine, hoặc chất ma tuý khác với khối lượng tương đương.",
-    "expected_context": "Bộ luật Hình sự 2015, Điều 249"
+    "question": "Luật Phòng, chống ma túy 2021 quy định trọng tâm những nội dung nào?",
+    "expected_answer": "Luật quy định trách nhiệm của cá nhân, gia đình, cơ quan, tổ chức trong phòng ngừa, đấu tranh, cai nghiện và quản lý sau cai nghiện ma túy.",
+    "expected_context": "luat-phong-chong-ma-tuy-2021.md"
   },
   {
-    "question": "Luật Phòng chống ma tuý 2021 quy định những hình thức cai nghiện nào?",
-    "expected_answer": "Cai nghiện tự nguyện tại gia đình, cai nghiện tự nguyện tại cộng đồng, cai nghiện tự nguyện tại cơ sở cai nghiện, và cai nghiện bắt buộc tại cơ sở cai nghiện.",
-    "expected_context": "Luật Phòng chống ma tuý 2021, Chương V"
+    "question": "Nguyên tắc chính trong phòng, chống ma túy là gì?",
+    "expected_answer": "Nguyên tắc là kết hợp phòng ngừa với đấu tranh, lấy phòng ngừa là chính và bảo đảm quyền, lợi ích hợp pháp của người tham gia phòng, chống ma túy.",
+    "expected_context": "luat-phong-chong-ma-tuy-2021.md"
   },
   {
-    "question": "Danh mục các chất ma tuý thuộc nhóm I theo quy định pháp luật Việt Nam gồm những chất nào?",
-    "expected_answer": "Nhóm I gồm các chất ma tuý tuyệt đối cấm sử dụng trong y học và đời sống, bao gồm heroin, cocaine, methamphetamine, MDMA (ecstasy), cannabis (cần sa), và các chất tương tự.",
-    "expected_context": "Nghị định 57/2022/NĐ-CP, Phụ lục I"
+    "question": "Luật Phòng, chống ma túy 2021 nhắc tới các hình thức cai nghiện nào?",
+    "expected_answer": "Luật nhắc tới cai nghiện tự nguyện, cai nghiện bắt buộc và quản lý sau cai nghiện.",
+    "expected_context": "luat-phong-chong-ma-tuy-2021.md"
+  },
+  {
+    "question": "Nghị định 105/2021/NĐ-CP hướng dẫn những nội dung nào?",
+    "expected_answer": "Nghị định 105/2021/NĐ-CP hướng dẫn quản lý người sử dụng trái phép chất ma túy, hồ sơ thủ tục cai nghiện, xác định tình trạng nghiện và tổ chức cai nghiện.",
+    "expected_context": "nghi-dinh-105-2021.md"
+  },
+  {
+    "question": "Cơ quan, tổ chức nào phối hợp trong quản lý và cai nghiện theo Nghị định 105/2021/NĐ-CP?",
+    "expected_answer": "Công an, y tế, lao động - thương binh và xã hội, ủy ban nhân dân cấp xã và gia đình người nghiện phối hợp trong quản lý và cai nghiện.",
+    "expected_context": "nghi-dinh-105-2021.md"
+  },
+  {
+    "question": "Nghị định 105/2021/NĐ-CP nói gì về xác định tình trạng nghiện?",
+    "expected_answer": "Nghị định hướng dẫn quy trình xác định tình trạng nghiện và lập hồ sơ quản lý người sử dụng trái phép chất ma túy.",
+    "expected_context": "nghi-dinh-105-2021.md"
+  },
+  {
+    "question": "Nghị định 57/2022/NĐ-CP dùng để làm gì?",
+    "expected_answer": "Nghị định 57/2022/NĐ-CP ban hành danh mục chất ma túy và tiền chất, làm căn cứ quản lý nhà nước, giám định, điều tra và xử lý vi phạm.",
+    "expected_context": "nghi-dinh-57-2022-danh-muc-chat-ma-tuy.md"
+  },
+  {
+    "question": "Danh mục chất ma túy và tiền chất có vai trò gì trong vụ án ma túy?",
+    "expected_answer": "Việc xác định một chất thuộc danh mục là chứng cứ quan trọng trong các vụ án tàng trữ, vận chuyển, mua bán hoặc tổ chức sử dụng trái phép chất ma túy.",
+    "expected_context": "nghi-dinh-57-2022-danh-muc-chat-ma-tuy.md"
+  },
+  {
+    "question": "Nghị định 57/2022/NĐ-CP nhắc tới những chất nào trong dữ liệu mẫu?",
+    "expected_answer": "Dữ liệu mẫu nhắc tới ketamine, heroin và methamphetamine như các từ khóa liên quan danh mục chất ma túy.",
+    "expected_context": "nghi-dinh-57-2022-danh-muc-chat-ma-tuy.md"
+  },
+  {
+    "question": "Bài VnExpress về Hữu Tín nêu sự việc gì?",
+    "expected_answer": "Bài VnExpress đưa tin diễn viên Trần Hữu Tín, nghệ danh Hữu Tín, bị tạm giữ để làm rõ nghi vấn liên quan đến ma túy.",
+    "expected_context": "article_01_huu_tin_vnexpress.md"
+  },
+  {
+    "question": "Trong vụ Hữu Tín, lực lượng chức năng phát hiện điều gì?",
+    "expected_answer": "Lực lượng chức năng kiểm tra và phát hiện nhóm người sử dụng ma túy tại một căn hộ, đồng thời thu giữ tang vật.",
+    "expected_context": "article_01_huu_tin_vnexpress.md"
+  },
+  {
+    "question": "Bài VnExpress về Châu Việt Cường mô tả hậu quả gì sau khi sử dụng ma túy?",
+    "expected_answer": "Bài báo mô tả Châu Việt Cường sau khi sử dụng ma túy rơi vào tình trạng ảo giác và có hành vi gây hậu quả nghiêm trọng.",
+    "expected_context": "article_02_chau_viet_cuong_vnexpress.md"
+  },
+  {
+    "question": "Bài VietnamNet về Châu Việt Cường nhắc tới kết quả xét xử nào?",
+    "expected_answer": "Bài VietnamNet tường thuật việc ca sĩ Châu Việt Cường nhận án tù trong vụ việc có yếu tố sử dụng ma túy và gây hậu quả chết người.",
+    "expected_context": "article_03_chau_viet_cuong_vietnamnet.md"
+  },
+  {
+    "question": "Bài VnExpress về Andrea Aybar nêu thông tin gì?",
+    "expected_answer": "Bài VnExpress đưa tin Andrea Aybar, còn gọi An Tây hoặc Nguyễn Thị An, bị tạm giữ để điều tra dấu hiệu liên quan việc tổ chức sử dụng ma túy.",
+    "expected_context": "article_04_andrea_aybar_vnexpress.md"
+  },
+  {
+    "question": "Bài Báo Văn Hóa về Andrea Aybar nêu cáo buộc nào?",
+    "expected_answer": "Bài Báo Văn Hóa cho biết Andrea Aybar Carmona và trợ lý bị truy tố liên quan hành vi tổ chức sử dụng trái phép chất ma túy và tàng trữ trái phép chất ma túy.",
+    "expected_context": "article_05_andrea_aybar_baovanhoa.md"
   }
 ]

@@ -38,6 +38,7 @@ except ImportError:  # Cho phép chạy trực tiếp: python src/task6_lexical_
 
 CORPUS: list[dict] = []  # List of {'content': str, 'metadata': dict}
 BM25_INDEX = None
+TFIDF_INDEX = None
 
 
 def _tokenize(text: str) -> list[str]:
@@ -84,6 +85,65 @@ class SimpleBM25:
             scores.append(score)
 
         return scores
+
+
+class SimpleTFIDF:
+    """Small TF-IDF/cosine index used for the lexical bonus demo."""
+
+    def __init__(self, tokenized_corpus: list[list[str]]):
+        self.corpus = tokenized_corpus
+        self.doc_vectors = []
+        self.doc_norms = []
+
+        document_frequency = Counter()
+        for doc in tokenized_corpus:
+            document_frequency.update(set(doc))
+
+        corpus_size = len(tokenized_corpus)
+        self.idf = {
+            term: math.log((1 + corpus_size) / (1 + freq)) + 1
+            for term, freq in document_frequency.items()
+        }
+
+        for doc in tokenized_corpus:
+            vector = self._build_vector(doc)
+            self.doc_vectors.append(vector)
+            self.doc_norms.append(_vector_norm(vector))
+
+    def _build_vector(self, tokens: list[str]) -> dict[str, float]:
+        if not tokens:
+            return {}
+
+        counts = Counter(tokens)
+        token_count = len(tokens)
+        return {
+            term: (count / token_count) * self.idf.get(term, 0.0)
+            for term, count in counts.items()
+        }
+
+    def get_scores(self, query_tokens: list[str]) -> list[float]:
+        if not self.corpus or not query_tokens:
+            return [0.0] * len(self.corpus)
+
+        query_vector = self._build_vector(query_tokens)
+        query_norm = _vector_norm(query_vector)
+        if query_norm == 0:
+            return [0.0] * len(self.corpus)
+
+        scores = []
+        for doc_vector, doc_norm in zip(self.doc_vectors, self.doc_norms):
+            if doc_norm == 0:
+                scores.append(0.0)
+                continue
+
+            dot = sum(weight * doc_vector.get(term, 0.0) for term, weight in query_vector.items())
+            scores.append(dot / (query_norm * doc_norm))
+
+        return scores
+
+
+def _vector_norm(vector: dict[str, float]) -> float:
+    return math.sqrt(sum(weight * weight for weight in vector.values()))
 
 
 def build_bm25_index(corpus: list[dict]):
@@ -153,6 +213,18 @@ def _get_index():
     return BM25_INDEX
 
 
+def _get_tfidf_index():
+    global TFIDF_INDEX, CORPUS
+
+    if TFIDF_INDEX is None:
+        if not CORPUS:
+            CORPUS = _load_corpus()
+        tokenized_corpus = [_tokenize(doc.get("content", "")) for doc in CORPUS]
+        TFIDF_INDEX = SimpleTFIDF(tokenized_corpus)
+
+    return TFIDF_INDEX
+
+
 def lexical_search(query: str, top_k: int = 10) -> list[dict]:
     """
     Tìm kiếm từ khóa sử dụng BM25.
@@ -189,6 +261,39 @@ def lexical_search(query: str, top_k: int = 10) -> list[dict]:
             "content": CORPUS[index]["content"],
             "score": float(scores[index]),
             "metadata": CORPUS[index].get("metadata", {}),
+        })
+
+    return results
+
+
+def tfidf_lexical_search(query: str, top_k: int = 10) -> list[dict]:
+    """
+    Tìm kiếm từ khóa bằng TF-IDF cosine similarity.
+
+    Đây là mode lexical bonus khác BM25: TF-IDF biểu diễn query và chunk thành
+    vector trọng số từ, rồi xếp hạng theo cosine similarity.
+    """
+    if top_k <= 0 or not query.strip():
+        return []
+
+    tfidf = _get_tfidf_index()
+    if not CORPUS:
+        return []
+
+    scores = tfidf.get_scores(_tokenize(query))
+    ranked_indices = sorted(
+        range(len(scores)),
+        key=lambda index: scores[index],
+        reverse=True,
+    )
+
+    results = []
+    for index in ranked_indices[:top_k]:
+        results.append({
+            "content": CORPUS[index]["content"],
+            "score": float(scores[index]),
+            "metadata": CORPUS[index].get("metadata", {}),
+            "source": "tfidf",
         })
 
     return results
