@@ -10,6 +10,7 @@ Hướng dẫn:
 """
 
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -75,20 +76,18 @@ def reorder_for_llm(chunks: list[dict]) -> list[dict]:
     Returns:
         List reordered để maximize LLM attention.
     """
-    # TODO: Implement reordering
-    #
-    # if len(chunks) <= 2:
-    #     return chunks
-    #
-    # # Split into first half (important → đầu) and second half (important → cuối)
-    # reordered = []
-    # for i in range(0, len(chunks), 2):
-    #     reordered.append(chunks[i])  # Odd positions go first
-    # for i in range(len(chunks) - 1 - (len(chunks) % 2 == 0), 0, -2):
-    #     reordered.append(chunks[i])  # Even positions go last (reversed)
-    #
-    # return reordered
-    raise NotImplementedError("Implement reorder_for_llm")
+    if len(chunks) <= 2:
+        return list(chunks)
+
+    reordered = []
+    for index in range(0, len(chunks), 2):
+        reordered.append(chunks[index])
+
+    last_even_index = len(chunks) - 1 if len(chunks) % 2 == 0 else len(chunks) - 2
+    for index in range(last_even_index, 0, -2):
+        reordered.append(chunks[index])
+
+    return reordered
 
 
 # =============================================================================
@@ -106,18 +105,104 @@ def format_context(chunks: list[dict]) -> str:
     Returns:
         Formatted context string.
     """
-    # TODO: Implement context formatting
-    #
-    # context_parts = []
-    # for i, chunk in enumerate(chunks, 1):
-    #     source = chunk.get("metadata", {}).get("source", f"Source {i}")
-    #     doc_type = chunk.get("metadata", {}).get("type", "unknown")
-    #     context_parts.append(
-    #         f"[Document {i} | Source: {source} | Type: {doc_type}]\n"
-    #         f"{chunk['content']}\n"
-    #     )
-    # return "\n---\n".join(context_parts)
-    raise NotImplementedError("Implement format_context")
+    context_parts = []
+    for index, chunk in enumerate(chunks, start=1):
+        metadata = chunk.get("metadata") if isinstance(chunk.get("metadata"), dict) else {}
+        source = metadata.get("source") or metadata.get("path") or f"Source {index}"
+        doc_type = metadata.get("type") or metadata.get("doc_type") or "unknown"
+        chunk_index = metadata.get("chunk_index", index - 1)
+        score = float(chunk.get("score", 0.0) or 0.0)
+
+        context_parts.append(
+            f"[Document {index} | Source: {source} | Type: {doc_type} | "
+            f"Chunk: {chunk_index} | Score: {score:.4f}]\n"
+            f"{str(chunk.get('content', '')).strip()}"
+        )
+
+    return "\n\n---\n\n".join(context_parts)
+
+
+def _citation_label(chunk: dict, fallback_index: int) -> str:
+    """Build a compact citation label from retrieval metadata."""
+    metadata = chunk.get("metadata") if isinstance(chunk.get("metadata"), dict) else {}
+    source = metadata.get("source") or metadata.get("path") or f"Nguồn {fallback_index}"
+    year_match = re.search(r"(20\d{2}|19\d{2})", source)
+    if year_match:
+        return f"{source}, {year_match.group(1)}"
+    return source
+
+
+def _split_sentences(text: str) -> list[str]:
+    """Sentence splitter nhỏ gọn cho fallback answer tiếng Việt."""
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if not normalized:
+        return []
+    sentences = re.split(r"(?<=[.!?])\s+", normalized)
+    return [sentence.strip() for sentence in sentences if sentence.strip()]
+
+
+def _offline_answer(query: str, chunks: list[dict]) -> str:
+    """
+    Generate a conservative cited answer without an external LLM.
+
+    Fallback này giữ đúng tinh thần RAG: chỉ nói từ context có sẵn và gắn
+    citation ngay sau từng ý. Nếu không có context thì từ chối xác minh.
+    """
+    if not chunks:
+        return "Tôi không thể xác minh thông tin này từ nguồn hiện có."
+
+    answer_parts = []
+    for index, chunk in enumerate(chunks[:TOP_K], start=1):
+        content = str(chunk.get("content", "")).strip()
+        if not content:
+            continue
+
+        sentence = _split_sentences(content)
+        excerpt = sentence[0] if sentence else content
+        if len(excerpt) > 360:
+            excerpt = excerpt[:357].rstrip() + "..."
+
+        citation = _citation_label(chunk, index)
+        answer_parts.append(f"{excerpt} [{citation}]")
+
+    if not answer_parts:
+        return "Tôi không thể xác minh thông tin này từ nguồn hiện có."
+
+    return (
+        f"Dựa trên các nguồn truy xuất được cho câu hỏi \"{query}\": "
+        + " ".join(answer_parts)
+    )
+
+
+def _call_openai_llm(query: str, context: str) -> str | None:
+    """Call OpenAI only when an API key is configured; otherwise use fallback."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return None
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(api_key=api_key)
+        user_message = f"""Context:
+{context}
+
+---
+
+Question: {query}"""
+
+        response = client.chat.completions.create(
+            model=os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=TEMPERATURE,
+            top_p=TOP_P,
+        )
+        return response.choices[0].message.content or None
+    except Exception:
+        return None
 
 
 # =============================================================================
@@ -146,43 +231,34 @@ def generate_with_citation(query: str, top_k: int = TOP_K) -> dict:
             'retrieval_source': str  # 'hybrid' hoặc 'pageindex'
         }
     """
-    # TODO: Implement generation pipeline
-    #
-    # # Step 1: Retrieve
-    # chunks = retrieve(query, top_k=top_k)
-    #
-    # # Step 2: Reorder
-    # reordered = reorder_for_llm(chunks)
-    #
-    # # Step 3: Format context
-    # context = format_context(reordered)
-    #
-    # # Step 4: Build prompt
-    # user_message = f"""Context:\n{context}\n\n---\n\nQuestion: {query}"""
-    #
-    # # Step 5: Call LLM
-    # from openai import OpenAI
-    # client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    #
-    # response = client.chat.completions.create(
-    #     model="gpt-4o-mini",
-    #     messages=[
-    #         {"role": "system", "content": SYSTEM_PROMPT},
-    #         {"role": "user", "content": user_message}
-    #     ],
-    #     temperature=TEMPERATURE,
-    #     top_p=TOP_P,
-    # )
-    #
-    # answer = response.choices[0].message.content
-    #
-    # # Step 6: Return
-    # return {
-    #     "answer": answer,
-    #     "sources": chunks,
-    #     "retrieval_source": chunks[0].get("source", "hybrid") if chunks else "none"
-    # }
-    raise NotImplementedError("Implement generate_with_citation")
+    top_k = max(1, int(top_k or TOP_K))
+    query = query.strip()
+    if not query:
+        return {
+            "answer": "Tôi không thể xác minh thông tin này từ nguồn hiện có.",
+            "sources": [],
+            "retrieval_source": "none",
+        }
+
+    chunks = retrieve(query, top_k=top_k)
+    reordered = reorder_for_llm(chunks)
+    context = format_context(reordered)
+
+    answer = _call_openai_llm(query, context)
+    if not answer:
+        answer = _offline_answer(query, reordered)
+
+    retrieval_source = "none"
+    if chunks:
+        retrieval_source = chunks[0].get("source", "hybrid")
+
+    return {
+        "answer": answer,
+        "sources": chunks,
+        "reordered_sources": reordered,
+        "context": context,
+        "retrieval_source": retrieval_source,
+    }
 
 
 if __name__ == "__main__":

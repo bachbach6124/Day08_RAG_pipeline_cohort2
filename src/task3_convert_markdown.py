@@ -14,12 +14,24 @@ Hướng dẫn:
 """
 
 import json
+import subprocess
 from pathlib import Path
 
 from markitdown import MarkItDown
 
 LANDING_DIR = Path(__file__).parent.parent / "data" / "landing"
 OUTPUT_DIR = Path(__file__).parent.parent / "data" / "standardized"
+
+
+def convert_with_textutil(filepath: Path) -> str:
+    """Fallback converter for legacy .doc files on macOS."""
+    completed = subprocess.run(
+        ["textutil", "-convert", "txt", "-stdout", str(filepath)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return completed.stdout
 
 
 def convert_legal_docs():
@@ -30,15 +42,20 @@ def convert_legal_docs():
 
     md = MarkItDown()
 
-    for filepath in legal_dir.iterdir():
+    for filepath in sorted(legal_dir.iterdir()):
         if filepath.suffix.lower() in (".pdf", ".docx", ".doc"):
             print(f"Converting: {filepath.name}")
-            # TODO: Convert và lưu file
-            # result = md.convert(str(filepath))
-            # output_path = output_dir / f"{filepath.stem}.md"
-            # output_path.write_text(result.text_content, encoding="utf-8")
-            # print(f"  ✓ Saved: {output_path}")
-            raise NotImplementedError("Implement convert_legal_docs")
+            try:
+                text_content = md.convert(str(filepath)).text_content
+            except Exception as exc:
+                if filepath.suffix.lower() != ".doc":
+                    raise
+                print(f"  MarkItDown skipped legacy .doc ({exc}); using textutil fallback")
+                text_content = convert_with_textutil(filepath)
+
+            output_path = output_dir / f"{filepath.stem}.md"
+            output_path.write_text(text_content.strip() + "\n", encoding="utf-8")
+            print(f"  ✓ Saved: {output_path}")
 
 
 def convert_news_articles():
@@ -47,22 +64,26 @@ def convert_news_articles():
     output_dir = OUTPUT_DIR / "news"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    for filepath in news_dir.iterdir():
+    for filepath in sorted(news_dir.iterdir()):
         if filepath.suffix.lower() == ".json":
             print(f"Converting: {filepath.name}")
-            # TODO: Đọc JSON, extract content_markdown, lưu thành .md
-            # data = json.loads(filepath.read_text(encoding="utf-8"))
-            # output_path = output_dir / f"{filepath.stem}.md"
-            #
-            # # Thêm metadata header
-            # header = f"# {data.get('title', 'Unknown')}\n\n"
-            # header += f"**Source:** {data.get('url', 'N/A')}\n"
-            # header += f"**Crawled:** {data.get('date_crawled', 'N/A')}\n\n---\n\n"
-            #
-            # content = header + data.get("content_markdown", "")
-            # output_path.write_text(content, encoding="utf-8")
-            # print(f"  ✓ Saved: {output_path}")
-            raise NotImplementedError("Implement convert_news_articles")
+            data = json.loads(filepath.read_text(encoding="utf-8"))
+            output_path = output_dir / f"{filepath.stem}.md"
+
+            header = f"# {data.get('title') or 'Unknown'}\n\n"
+            header += f"**Source:** {data.get('source') or 'N/A'}\n"
+            header += f"**URL:** {data.get('url') or data.get('original_url') or 'N/A'}\n"
+            header += f"**Published:** {data.get('published_at') or 'N/A'}\n"
+            header += f"**Crawled:** {data.get('crawled_at') or data.get('date_crawled') or 'N/A'}\n\n---\n\n"
+
+            body = (
+                data.get("content_markdown")
+                or data.get("markdown")
+                or data.get("content")
+                or ""
+            )
+            output_path.write_text(header + body.strip() + "\n", encoding="utf-8")
+            print(f"  ✓ Saved: {output_path}")
 
 
 def convert_all():
